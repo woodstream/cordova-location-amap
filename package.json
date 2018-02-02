@@ -1,0 +1,28 @@
+{
+  "name": "cordova-location-amap",
+  "version": "1.0.0",
+  "description": "Cordova Location Plugin By AMap",
+  "cordova": {
+    "id": "cordova-location-amap",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/woodstream/cordova-location-amap.git"
+  },
+  "keywords": [
+    "cordova",
+    "location",
+    "高德",
+    "geolocation",
+    "amap"
+  ],
+  "bugs": {
+    "url": "https://github.com/woodstream/cordova-location-amap/issues"
+  },
+  "author": "woodstream",
+  "license": "Apache 2.0"
+}

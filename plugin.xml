@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-location-amap" version="1.0.0" 
+    xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>cordova-location-amap</name>
+    <description>Cordova Location Plugin By AMap</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova, location, aMap</keywords>
+    <preference name="ANDROID_KEY" />
+    <preference name="IOS_KEY" />
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0"/>
+    </engines>
+
+    <js-module name="AMapLocation" src="www/cordova-location-amap.js">
+        <clobbers target="cordova.plugins.aMapLocation" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+       <config-file target="AndroidManifest.xml" parent="/*">
+            <!-- 这个权限用于进行网络定位-->
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+            <!-- 这个权限用于访问GPS定位-->
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+            <!-- 用于访问wifi网络信息，wifi信息会用于进行网络定位-->
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
+            <!-- 获取运营商信息，用于支持提供运营商信息相关的接口-->
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+            <!-- 这个权限用于获取wifi的获取权限，wifi信息会用来进行网络定位-->
+            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
+            <!-- 用于读取手机当前的状态-->
+            <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
+            <!-- 写入扩展存储，向扩展卡写入数据，用于写入离线定位数据-->
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
+            <!-- 访问网络，网络定位需要上网-->
+            <uses-permission android:name="android.permission.INTERNET" />
+            <!-- SD卡读取权限，用户写入离线定位数据-->
+            <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"></uses-permission>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <service android:name="com.amap.api.location.APSService"></service>   
+            <meta-data android:name="com.amap.api.v2.apikey" android:value="$ANDROID_KEY"></meta-data> 
+        </config-file>
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="AMapLocation" >
+                <param name="android-package" value="com.woodstream.plugins.aMapLocation.Location"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/Location.java" target-dir="src/com/woodstream/plugins/aMapLocation" />
+        <source-file src="src/android/AMap_Location.jar" target-dir="libs" />
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="AMapLocation">
+                <param name="ios-package" value="AMapLocation" />
+            </feature>
+        </config-file>
+
+        <config-file target="*-Info.plist" parent="AMapAppKey">
+          <string>$IOS_KEY</string>
+        </config-file>
+
+        <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+            <string>获取位置信息</string>
+        </config-file>
+
+        <header-file src="src/ios/AMapLocation.h" />
+        <source-file src="src/ios/AMapLocation.m" />
+
+        <framework src="src/ios/lib/AMapFoundationKit.framework"  custom="true"/>
+        <framework src="src/ios/lib/AMapLocationKit.framework"  custom="true"/>
+        <framework src="JavaScriptcore.framework" />
+        <framework src="SystemConfiguration.framework" />
+        <framework src="CoreTelephony.framework" />
+        <framework src="Security.framework" />
+        <framework src="libz.tbd" />
+        <framework src="libc++.tbd" />
+        <framework src="libstdc++.6.0.9.tbd" />
+    </platform>
+</plugin>
