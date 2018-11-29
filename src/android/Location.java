@@ -1,10 +1,13 @@
 package com.woodstream.plugins.aMapLocation;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -19,11 +22,15 @@ import com.amap.api.location.AMapLocationListener;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.os.Build;
 import android.util.Log;
 
 public class Location extends CordovaPlugin implements AMapLocationListener{
     
     String TAG = "GeolocationPlugin";
+    private LocationManager lm;
+
     String [] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
     
     public static AMapLocationClient keepLocationInstance = null;
@@ -33,50 +40,69 @@ public class Location extends CordovaPlugin implements AMapLocationListener{
     CallbackContext callback;
 
     @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        lm = (LocationManager) cordova.getActivity().getSystemService(cordova.getActivity().LOCATION_SERVICE);
+    }
+
+
+    @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         callback = callbackContext;
-        if (action.equals("getCurrentPosition")) {
-            locationClient = new AMapLocationClient(this.cordova.getActivity().getApplicationContext());
-            locationOption = new AMapLocationClientOption();
-            // 设置定位模式为高精度模式
-            locationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
-            //设置为单次定位
-            locationOption.setOnceLocation(true);
-            // 设置定位监听
-            locationClient.setLocationListener(this);
-            locationOption.setNeedAddress(true);
-            locationOption.setInterval(2000);
 
-            locationClient.setLocationOption(locationOption);
-            // 启动定位
-            locationClient.startLocation();
-            return true;
-        } else if (action.equals("watchPosition")) { //启动持续定位
-            if (keepLocationInstance != null) { //判断是否存在未关闭的持续定位对象
-             keepLocationInstance.stopLocation();
-             keepLocationInstance.onDestroy();
-             keepLocationInstance = null;
+        if (action.equals("getCurrentPosition")) {
+            if (!needsToAlertForRuntimePermission()) {
+                locationClient = new AMapLocationClient(this.cordova.getActivity().getApplicationContext());
+                locationOption = new AMapLocationClientOption();
+                // 设置定位模式为高精度模式
+                locationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
+                //设置为单次定位
+                locationOption.setOnceLocation(true);
+                // 设置定位监听
+                locationClient.setLocationListener(this);
+                locationOption.setNeedAddress(true);
+                locationOption.setInterval(2000);
+
+                locationClient.setLocationOption(locationOption);
+                // 启动定位
+                locationClient.startLocation();
+                return true;
+            }else{
+                requestPermission();
+                return false;
             }
-            
-            int interval = args.optInt(0, 10000); //获取定位间隔参数，缺省10秒钟定位一次
-            
-             locationClient = new AMapLocationClient(this.cordova.getActivity().getApplicationContext());
-             locationOption = new AMapLocationClientOption();
-             // 设置定位模式为高精度模式
-             locationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
-             //设置为多次定位
-             locationOption.setOnceLocation(false);
-             // 设置定位监听
-             locationClient.setLocationListener(this);
-             locationOption.setNeedAddress(true);
-             locationOption.setInterval(interval);
-             locationClient.setLocationOption(locationOption);
-             // 启动定位
-             locationClient.startLocation();
-             keepSendBack = true;
-             // 存储持续定位对象用于关闭
-             keepLocationInstance = locationClient;
-             return true;
+
+        } else if (action.equals("watchPosition")) { //启动持续定位
+            if (!needsToAlertForRuntimePermission()) {
+                if (keepLocationInstance != null) { //判断是否存在未关闭的持续定位对象
+                    keepLocationInstance.stopLocation();
+                    keepLocationInstance.onDestroy();
+                    keepLocationInstance = null;
+                }
+
+                int interval = args.optInt(0, 10000); //获取定位间隔参数，缺省10秒钟定位一次
+
+                locationClient = new AMapLocationClient(this.cordova.getActivity().getApplicationContext());
+                locationOption = new AMapLocationClientOption();
+                // 设置定位模式为高精度模式
+                locationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
+                //设置为多次定位
+                locationOption.setOnceLocation(false);
+                // 设置定位监听
+                locationClient.setLocationListener(this);
+                locationOption.setNeedAddress(true);
+                locationOption.setInterval(interval);
+                locationClient.setLocationOption(locationOption);
+                // 启动定位
+                locationClient.startLocation();
+                keepSendBack = true;
+                // 存储持续定位对象用于关闭
+                keepLocationInstance = locationClient;
+                return true;
+            }else{
+                requestPermission();
+                return false;
+            }
         } else if (action.equals("clearWatch")) { //停止持续定位
             if (keepLocationInstance != null) {
                 keepLocationInstance.stopLocation();
@@ -93,6 +119,7 @@ public class Location extends CordovaPlugin implements AMapLocationListener{
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null) {
+            Log.v(TAG,aMapLocation.toString());
             if (aMapLocation.getErrorCode() == 0) {
                 SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date date = new Date(aMapLocation.getTime());
