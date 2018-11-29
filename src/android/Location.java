@@ -29,7 +29,6 @@ import android.util.Log;
 public class Location extends CordovaPlugin implements AMapLocationListener{
     
     String TAG = "GeolocationPlugin";
-    private LocationManager lm;
 
     String [] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
     
@@ -38,12 +37,6 @@ public class Location extends CordovaPlugin implements AMapLocationListener{
     private AMapLocationClientOption locationOption = null;
     boolean keepSendBack = false;
     CallbackContext callback;
-
-    @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
-        lm = (LocationManager) cordova.getActivity().getSystemService(cordova.getActivity().LOCATION_SERVICE);
-    }
 
 
     @Override
@@ -185,5 +178,33 @@ public class Location extends CordovaPlugin implements AMapLocationListener{
             callback.sendPluginResult(result);
         }
     }
+
+
+
+    //权限
+    private static final int REQUEST_CODE = 100001;
+
+    private boolean needsToAlertForRuntimePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return !cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || !cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+        } else {
+            return false;
+        }
+    }
+
+    private void requestPermission() {
+        ArrayList<String> permissionsToRequire = new ArrayList<String>();
+
+        if (!cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
+            permissionsToRequire.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        if (!cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION))
+            permissionsToRequire.add(Manifest.permission.ACCESS_FINE_LOCATION);
+
+        String[] _permissionsToRequire = new String[permissionsToRequire.size()];
+        _permissionsToRequire = permissionsToRequire.toArray(_permissionsToRequire);
+        cordova.requestPermissions(this, REQUEST_CODE, _permissionsToRequire);
+    }
+
 
 }
